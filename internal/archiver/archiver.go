@@ -47,6 +47,7 @@ type Archiver struct {
 	Excludes     []string
 
 	WithAccessTime bool
+	DataLess       bool
 }
 
 // New returns a new archiver.
@@ -168,12 +169,22 @@ func (arch *Archiver) saveChunk(ctx context.Context, chunk chunker.Chunk, p *res
 	defer freeBuf(chunk.Data)
 
 	id := restic.Hash(chunk.Data)
-	err := arch.Save(ctx, restic.DataBlob, chunk.Data, id)
-	// TODO handle error
-	if err != nil {
-		debug.Log("Save(%v) failed: %v", id.Str(), err)
-		fmt.Printf("\nerror while saving data to the repo: %+v\n", err)
-		panic(err)
+	if arch.DataLess {
+		err := arch.Save(ctx, restic.DataBlob, []byte{}, id)
+		// TODO handle error
+		if err != nil {
+			debug.Log("Save(%v) failed: %v", id.Str(), err)
+			fmt.Printf("\nerror while saving nodata to the repo: %+v\n", err)
+			panic(err)
+		}
+	} else {
+		err := arch.Save(ctx, restic.DataBlob, chunk.Data, id)
+		// TODO handle error
+		if err != nil {
+			debug.Log("Save(%v) failed: %v", id.Str(), err)
+			fmt.Printf("\nerror while saving data to the repo: %+v\n", err)
+			panic(err)
+		}
 	}
 
 	p.Report(restic.Stat{Bytes: uint64(chunk.Length)})

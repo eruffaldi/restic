@@ -39,6 +39,7 @@ func newFile(ctx context.Context, root *Root, inode uint64, node *restic.Node) (
 		if !ok {
 			size, err = root.repo.LookupBlobSize(id, restic.DataBlob)
 			if err != nil {
+				debug.Log("failed LookupBlobSize")
 				return nil, err
 			}
 		}
@@ -48,8 +49,10 @@ func newFile(ctx context.Context, root *Root, inode uint64, node *restic.Node) (
 	}
 
 	if bytes != node.Size {
-		debug.Log("sizes do not match: node.Size %v != size %v, using real size", node.Size, bytes)
-		node.Size = bytes
+		if bytes != 0 || len(node.Content) == 0 {
+			debug.Log("sizes do not match: node.Size %v != size %v, using real size", node.Size, bytes)
+			node.Size = bytes
+		}
 	}
 
 	return &file{
