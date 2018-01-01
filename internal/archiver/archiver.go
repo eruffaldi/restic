@@ -48,6 +48,7 @@ type Archiver struct {
 
 	WithAccessTime bool
 	DataLess       bool
+	MetaOnly       bool
 }
 
 // New returns a new archiver.
@@ -169,7 +170,7 @@ func (arch *Archiver) saveChunk(ctx context.Context, chunk chunker.Chunk, p *res
 	defer freeBuf(chunk.Data)
 
 	id := restic.Hash(chunk.Data)
-	if arch.DataLess {
+	if arch.MetaOnly {
 		err := arch.Save(ctx, restic.DataBlob, []byte{}, id)
 		// TODO handle error
 		if err != nil {
@@ -242,6 +243,10 @@ func (arch *Archiver) SaveFile(ctx context.Context, p *restic.Progress, node *re
 	node, err = arch.reloadFileIfChanged(node, file)
 	if err != nil {
 		return node, err
+	}
+
+	if arch.DataLess {
+		return node, nil
 	}
 
 	chnker := chunker.New(file, arch.repo.Config().ChunkerPolynomial)

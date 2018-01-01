@@ -49,7 +49,8 @@ func newFile(ctx context.Context, root *Root, inode uint64, node *restic.Node) (
 	}
 
 	if bytes != node.Size {
-		if bytes != 0 || len(node.Content) == 0 {
+		if bytes != 0 {
+			// ADD check for DataLess mount
 			debug.Log("sizes do not match: node.Size %v != size %v, using real size", node.Size, bytes)
 			node.Size = bytes
 		}

@@ -66,6 +66,7 @@ type BackupOptions struct {
 	FilesFrom        string
 	TimeStamp        string
 	WithAtime        bool
+	MetaOnly         bool
 	DataLess         bool
 }
 
@@ -89,7 +90,8 @@ func init() {
 	f.StringVar(&backupOptions.FilesFrom, "files-from", "", "read the files to backup from file (can be combined with file args)")
 	f.StringVar(&backupOptions.TimeStamp, "time", "", "time of the backup (ex. '2012-11-01 22:08:41') (default: now)")
 	f.BoolVar(&backupOptions.WithAtime, "with-atime", false, "store the atime for all files and directories")
-	f.BoolVar(&backupOptions.DataLess, "data-less", false, "do not store data")
+	f.BoolVar(&backupOptions.DataLess, "data-less", false, "do not scan file data")
+	f.BoolVar(&backupOptions.MetaOnly, "meta-only", false, "do not store data")
 }
 
 func newScanProgress(gopts GlobalOptions) *restic.Progress {
@@ -464,6 +466,7 @@ func runBackup(opts BackupOptions, gopts GlobalOptions, args []string) error {
 	arch.SelectFilter = selectFilter
 	arch.WithAccessTime = opts.WithAtime
 	arch.DataLess = opts.DataLess
+	arch.MetaOnly = opts.MetaOnly
 
 	arch.Warn = func(dir string, fi os.FileInfo, err error) {
 		// TODO: make ignoring errors configurable
